@@ -2023,13 +2023,6 @@
             const message = messageInput.value.trim();
             if (!message) return;
 
-            // Use mock if no API key for paid providers
-            const provider = providerSelect.value;
-            if (['openai', 'gemini', 'groq', 'mistral', 'huggingface'].includes(provider) && !apiKeys[provider]) {
-                providerSelect.value = 'mock';
-                updateModels();
-            }
-
             addMessage(message, 'user');
             messageInput.value = '';
             messageInput.style.height = 'auto';
@@ -2048,6 +2041,10 @@
                     })
                 });
 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 if (data.conversationId) {
@@ -2062,8 +2059,32 @@
                 }
             } catch (error) {
                 hideTyping();
-                // Use mock response on error
-                addMessage(`I received: "${message}". (Note: Please add API keys for real AI responses or use Mock AI)`, 'assistant');
+                const provider = providerSelect.value;
+                if (provider === 'mock') {
+                    // Mock provider - give a better response
+                    addMessage(`👋 Hello! I'm your AI assistant. You said: "${message}"
+
+I'm currently running in **mock mode** for testing. To get real AI responses:
+
+1. **Free options**: Select Pollinations AI (no API key needed)
+2. **With API keys**: Add your API keys in Settings or use environment variables
+
+Try asking me something like:
+- "What can you do?"
+- "Help me write code"
+- "Summarize this text"`, 'assistant');
+                } else {
+                    // Real provider failed - show helpful error
+                    addMessage(`❌ **Connection Error**
+
+Failed to get response from **${provider}**. Possible causes:
+
+1. **API key not set**: Add your API key in Settings or as environment variable (e.g., GROQ_API_KEY)
+2. **Invalid API key**: Check your API key is correct
+3. **Network issues**: Check your internet connection
+
+**Quick fix**: Switch to **Pollinations AI** (free, no API key needed) for instant responses!`, 'assistant');
+                }
             }
 
             sendButton.disabled = false;
