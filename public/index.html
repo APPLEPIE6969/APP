@@ -1695,13 +1695,148 @@
             }
         };
 
+        // Provider Custom Animated Dropdown
+        function createProviderDropdown() {
+            const wrapper = document.querySelector('.provider-selector-wrapper');
+            if (!wrapper) return;
+
+            // Create custom dropdown structure
+            const customDropdown = document.createElement('div');
+            customDropdown.className = 'custom-dropdown';
+            customDropdown.id = 'providerCustomDropdown';
+
+            const selected = document.createElement('div');
+            selected.className = 'dropdown-selected';
+            selected.innerHTML = `
+                <span id="providerDropdownSelectedText">Select Provider</span>
+                <span class="dropdown-arrow">▼</span>
+            `;
+
+            const options = document.createElement('div');
+            options.className = 'dropdown-options';
+            options.id = 'providerDropdownOptions';
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'dropdown-backdrop';
+            backdrop.id = 'providerDropdownBackdrop';
+
+            customDropdown.appendChild(selected);
+            customDropdown.appendChild(options);
+            wrapper.appendChild(backdrop);
+
+            // Add after the original select (which we hide)
+            const originalSelect = document.getElementById('providerSelect');
+            if (originalSelect) {
+                originalSelect.style.display = 'none';
+                wrapper.insertBefore(customDropdown, originalSelect);
+            }
+
+            // Event listeners
+            selected.addEventListener('click', toggleProviderDropdown);
+            backdrop.addEventListener('click', closeProviderDropdown);
+
+            // Populate initial options
+            populateProviderDropdown();
+        }
+
+        function populateProviderDropdown() {
+            const options = document.getElementById('providerDropdownOptions');
+            const selectedText = document.getElementById('providerDropdownSelectedText');
+
+            if (!options || !providerSelect) return;
+
+            const optionsHtml = [];
+            for (const option of providerSelect.options) {
+                const isSelected = option.value === providerSelect.value;
+                const icon = option.text.split(' ')[0] || '🤖';
+                const label = option.text.substring(option.text.indexOf(' ') + 1) || option.text;
+
+                optionsHtml.push(`
+                    <div class="dropdown-option ${isSelected ? 'selected' : ''}" 
+                         data-value="${option.value}" 
+                         onclick="selectProviderOption('${option.value}')">
+                        <span class="model-icon">${icon}</span>
+                        <span>${label}</span>
+                    </div>
+                `);
+            }
+
+            options.innerHTML = optionsHtml.join('');
+
+            // Update selected text
+            const selectedOption = providerSelect.options[providerSelect.selectedIndex];
+            if (selectedOption && selectedText) {
+                const icon = selectedOption.text.split(' ')[0] || '🤖';
+                const label = selectedOption.text.substring(selectedOption.text.indexOf(' ') + 1) || selectedOption.text;
+                selectedText.innerHTML = `<span class="model-icon">${icon}</span> ${label}`;
+            }
+        }
+
+        function toggleProviderDropdown() {
+            const dropdown = document.getElementById('providerCustomDropdown');
+            const backdrop = document.getElementById('providerDropdownBackdrop');
+
+            if (!dropdown || !backdrop) return;
+
+            // Close model dropdown if open
+            closeModelDropdown();
+
+            if (dropdown.classList.contains('open')) {
+                closeProviderDropdown();
+            } else {
+                dropdown.classList.add('open');
+                backdrop.classList.add('active');
+
+                // Animate options stagger
+                const options = dropdown.querySelectorAll('.dropdown-option');
+                options.forEach((opt, i) => {
+                    opt.style.opacity = '0';
+                    opt.style.transform = 'translateX(-10px)';
+                    setTimeout(() => {
+                        opt.style.transition = 'all 0.2s ease';
+                        opt.style.opacity = '1';
+                        opt.style.transform = 'translateX(0)';
+                    }, i * 30);
+                });
+            }
+        }
+
+        function closeProviderDropdown() {
+            const dropdown = document.getElementById('providerCustomDropdown');
+            const backdrop = document.getElementById('providerDropdownBackdrop');
+
+            if (!dropdown || !backdrop) return;
+
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('active');
+        }
+
+        function selectProviderOption(value) {
+            providerSelect.value = value;
+            closeProviderDropdown();
+
+            // Animate selection
+            const selectedText = document.getElementById('providerDropdownSelectedText');
+            if (selectedText) {
+                selectedText.style.transform = 'scale(0.95)';
+                setTimeout(() => selectedText.style.transform = 'scale(1)', 150);
+            }
+
+            // Update models when provider changes
+            updateModels();
+
+            // Trigger change event
+            providerSelect.dispatchEvent(new Event('change'));
+        }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadTools();
             updateModels();
             loadTheme();
 
-            // Initialize custom dropdown after a short delay
+            // Initialize custom dropdowns after a short delay
+            setTimeout(createProviderDropdown, 50);
             setTimeout(createModelDropdown, 100);
 
             // Tab switching
@@ -1709,10 +1844,17 @@
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
             });
 
-            // Provider change
-            providerSelect.addEventListener('change', updateModels);
+            // Close dropdowns on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModelDropdown();
+                    closeProviderDropdown();
+                }
+            });
 
-            // Close dropdown on escape key
+            // Provider change - handled by custom dropdown
+
+            // Close dropdowns on escape key
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && modelDropdownOpen) {
                     closeModelDropdown();
