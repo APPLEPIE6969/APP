@@ -146,6 +146,14 @@ export class ApiKeyManager {
         return Array.from(this.keys.values()).filter(k => k.provider === provider);
     }
 
+    public async getDecryptedKeyByProvider(provider: string): Promise<string | null> {
+        const keys = this.getKeysByProvider(provider);
+        if (!keys || keys.length === 0) {
+            return null;
+        }
+        return this.decrypt(keys[0].encryptedKey);
+    }
+
     public async validateKey(id: string): Promise<boolean> {
         const apiKey = await this.getKey(id);
         if (!apiKey) {

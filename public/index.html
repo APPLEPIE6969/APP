@@ -5,7 +5,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart AI Assistant</title>
+    <!-- Marked.js for Markdown rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js for code syntax highlighting -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <style>
+        /* Markdown styles */
+        .markdown-content {
+            line-height: 1.6;
+        }
+
+        .markdown-content code {
+            background: var(--bg-tertiary);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 0.9em;
+        }
+
+        .markdown-content pre {
+            background: #1e1e1e;
+            padding: 16px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .markdown-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e1e1e1;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid var(--accent-primary);
+            padding-left: 16px;
+            margin: 12px 0;
+            color: var(--text-secondary);
+        }
+
+        .markdown-content ul,
+        .markdown-content ol {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+
+        .markdown-content li {
+            margin: 4px 0;
+        }
+
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3 {
+            margin: 16px 0 8px 0;
+            font-weight: 600;
+        }
+
+        .markdown-content h1 {
+            font-size: 1.5em;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.3em;
+        }
+
+        .markdown-content h3 {
+            font-size: 1.1em;
+        }
+
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 12px 0;
+        }
+
+        .markdown-content th,
+        .markdown-content td {
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            text-align: left;
+        }
+
+        .markdown-content th {
+            background: var(--bg-tertiary);
+        }
+
+        .markdown-content a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .markdown-content a:hover {
+            text-decoration: underline;
+        }
+
         :root {
             --bg-primary: #f8fafc;
             --bg-secondary: #ffffff;
@@ -1198,82 +1293,92 @@
     </div>
 
     <script>
-        // All provider models
+        // Model capabilities: 'chat', 'image', 'video', 'audio'
+        const CAPABILITY_CHAT = 'chat';
+        const CAPABILITY_IMAGE = 'image';
+        const CAPABILITY_VIDEO = 'video';
+        const CAPABILITY_AUDIO = 'audio';
+
+        // All provider models with capabilities
         const providerModels = {
             mock: [
-                { value: 'mock-model-1', label: '🤖 Mock Model 1' },
-                { value: 'mock-model-2', label: '🤖 Mock Model 2' }
+                { value: 'mock-model-1', label: '🤖 Mock Model 1', capabilities: [CAPABILITY_CHAT] },
+                { value: 'mock-model-2', label: '🤖 Mock Model 2', capabilities: [CAPABILITY_CHAT] }
             ],
             openai: [
-                { value: 'gpt-4o-mini', label: '⚡ GPT-4o Mini' },
-                { value: 'gpt-4o', label: '🚀 GPT-4o' },
-                { value: 'gpt-3.5-turbo', label: '🔥 GPT-3.5 Turbo' },
-                { value: 'gpt-4-turbo', label: '💪 GPT-4 Turbo' },
-                { value: 'o1', label: '🧠 OpenAI o1' },
-                { value: 'o1-mini', label: '⚡ OpenAI o1-mini' },
-                { value: 'o3', label: '🧠 OpenAI o3' },
-                { value: 'o3-mini', label: '⚡ OpenAI o3-mini' },
-                { value: 'o4-mini', label: '💨 OpenAI o4-mini' }
+                { value: 'gpt-4o-mini', label: '⚡ GPT-4o Mini', capabilities: [CAPABILITY_CHAT, CAPABILITY_AUDIO] },
+                { value: 'gpt-4o', label: '🚀 GPT-4o', capabilities: [CAPABILITY_CHAT, CAPABILITY_AUDIO] },
+                { value: 'gpt-3.5-turbo', label: '🔥 GPT-3.5 Turbo', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gpt-4-turbo', label: '💪 GPT-4 Turbo', capabilities: [CAPABILITY_CHAT] },
+                { value: 'o1', label: '🧠 OpenAI o1', capabilities: [CAPABILITY_CHAT] },
+                { value: 'o1-mini', label: '⚡ OpenAI o1-mini', capabilities: [CAPABILITY_CHAT] },
+                { value: 'o3', label: '🧠 OpenAI o3', capabilities: [CAPABILITY_CHAT] },
+                { value: 'o3-mini', label: '⚡ OpenAI o3-mini', capabilities: [CAPABILITY_CHAT] },
+                { value: 'o4-mini', label: '💨 OpenAI o4-mini', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gpt-image-1', label: '🎨 GPT Image 1', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'dall-e-3', label: '🎨 DALL-E 3', capabilities: [CAPABILITY_IMAGE] }
             ],
             gemini: [
-                { value: 'gemini-2.5-flash', label: '⚡ Gemini 2.5 Flash' },
-                { value: 'gemini-2.5-flash-lite', label: '💨 Gemini 2.5 Flash Lite' },
-                { value: 'gemini-3-flash-preview', label: '🚀 Gemini 3 Flash Preview' },
-                { value: 'gemini-robotics-er-1.5-preview', label: '🤖 Gemini Robotics ER' },
-                { value: 'gemma-3-27b-it', label: '🧠 Gemma 3 27B' },
-                { value: 'gemma-3-12b-it', label: '💪 Gemma 3 12B' },
-                { value: 'gemma-3-4b-it', label: '⚡ Gemma 3 4B' },
-                { value: 'gemma-3-2b-it', label: '💨 Gemma 3 2B' },
-                { value: 'gemma-3-1b-it', label: '✨ Gemma 3 1B' },
-                { value: 'gemini-2.5-flash-tts', label: '🎵 Gemini 2.5 Flash TTS' },
-                { value: 'text-embedding-004', label: '📊 Text Embedding 004' }
+                { value: 'gemini-2.5-flash', label: '⚡ Gemini 2.5 Flash', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemini-2.5-flash-lite', label: '💨 Gemini 2.5 Flash Lite', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemini-3-flash-preview', label: '🚀 Gemini 3 Flash Preview', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemini-robotics-er-1.5-preview', label: '🤖 Gemini Robotics ER', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemma-3-27b-it', label: '🧠 Gemma 3 27B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemma-3-12b-it', label: '💪 Gemma 3 12B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemma-3-4b-it', label: '⚡ Gemma 3 4B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemma-3-2b-it', label: '💨 Gemma 3 2B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemma-3-1b-it', label: '✨ Gemma 3 1B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemini-2.5-flash-tts', label: '🎵 Gemini 2.5 Flash TTS', capabilities: [CAPABILITY_CHAT, CAPABILITY_AUDIO] }
             ],
             groq: [
-                { value: 'llama-3.3-70b-versatile', label: '🦙 Llama 3.3 70B' },
-                { value: 'llama-3.1-8b-instant', label: '⚡ Llama 3.1 8B' },
-                { value: 'allam-2-7b', label: '🦙 Allam 2 7B' },
-                { value: 'groq/compound', label: '🧪 Groq Compound' },
-                { value: 'groq/compound-mini', label: '💨 Groq Compound Mini' },
-                { value: 'meta-llama/llama-4-maverick-17b-128e-instruct', label: '🦙 Llama 4 Maverick' },
-                { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: '🦙 Llama 4 Scout' },
-                { value: 'meta-llama/llama-guard-4-12b', label: '🛡️ Llama Guard 4' },
-                { value: 'qwen/qwen3-32b', label: '🐴 Qwen 3 32B' },
-                { value: 'whisper-large-v3', label: '🎤 Whisper Large V3' },
-                { value: 'whisper-large-v3-turbo', label: '💨 Whisper Large V3 Turbo' }
+                { value: 'llama-3.3-70b-versatile', label: '🦙 Llama 3.3 70B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'llama-3.1-8b-instant', label: '⚡ Llama 3.1 8B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'allam-2-7b', label: '🦙 Allam 2 7B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'groq/compound', label: '🧪 Groq Compound', capabilities: [CAPABILITY_CHAT] },
+                { value: 'groq/compound-mini', label: '💨 Groq Compound Mini', capabilities: [CAPABILITY_CHAT] },
+                { value: 'meta-llama/llama-4-maverick-17b-128e-instruct', label: '🦙 Llama 4 Maverick', capabilities: [CAPABILITY_CHAT] },
+                { value: 'meta-llama/llama-4-scout-17b-16e-instruct', label: '🦙 Llama 4 Scout', capabilities: [CAPABILITY_CHAT] },
+                { value: 'meta-llama/llama-guard-4-12b', label: '🛡️ Llama Guard 4', capabilities: [CAPABILITY_CHAT] },
+                { value: 'qwen/qwen3-32b', label: '🐴 Qwen 3 32B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'whisper-large-v3', label: '🎤 Whisper Large V3', capabilities: [CAPABILITY_AUDIO] },
+                { value: 'whisper-large-v3-turbo', label: '💨 Whisper Large V3 Turbo', capabilities: [CAPABILITY_AUDIO] }
             ],
             mistral: [
-                { value: 'mistral-small-latest', label: '⚡ Mistral Small' },
-                { value: 'mistral-medium-latest', label: '🚀 Mistral Medium' },
-                { value: 'mistral-large-latest', label: '💪 Mistral Large' },
-                { value: 'codestral-latest', label: '💻 Codestral' },
-                { value: 'open-mistral-7b', label: '🦙 Mistral 7B' },
-                { value: 'open-mixtral-8x7b', label: '🦙 Mixtral 8x7B' },
-                { value: 'ministral-14b-2512', label: '🧠 Ministral 14B' }
+                { value: 'mistral-small-latest', label: '⚡ Mistral Small', capabilities: [CAPABILITY_CHAT] },
+                { value: 'mistral-medium-latest', label: '🚀 Mistral Medium', capabilities: [CAPABILITY_CHAT] },
+                { value: 'mistral-large-latest', label: '💪 Mistral Large', capabilities: [CAPABILITY_CHAT] },
+                { value: 'codestral-latest', label: '💻 Codestral', capabilities: [CAPABILITY_CHAT] },
+                { value: 'open-mistral-7b', label: '🦙 Mistral 7B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'open-mixtral-8x7b', label: '🦙 Mixtral 8x7B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'ministral-14b-2512', label: '🧠 Ministral 14B', capabilities: [CAPABILITY_CHAT] }
             ],
             huggingface: [
-                { value: 'meta-llama/Llama-3-8b', label: '🦙 Llama 3 8B' },
-                { value: 'meta-llama/Llama-3-70b', label: '🦙 Llama 3 70B' },
-                { value: 'mistralai/Mistral-7B-Instruct-v0.3', label: '🦙 Mistral 7B Instruct' },
-                { value: 'google/gemma-7b', label: '🧠 Gemma 7B' },
-                { value: 'Qwen/Qwen2-72B-Instruct', label: '🐴 Qwen 2 72B' },
-                { value: 'HuggingFaceH4/zephyr-7b-beta', label: '💨 Zephyr 7B' },
-                { value: 'uncensored-com/unrestricted-gpt-oss-120b-lora', label: '🔓 Unrestricted GPT' }
+                { value: 'meta-llama/Llama-3-8b', label: '🦙 Llama 3 8B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'meta-llama/Llama-3-70b', label: '🦙 Llama 3 70B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'mistralai/Mistral-7B-Instruct-v0.3', label: '🦙 Mistral 7B Instruct', capabilities: [CAPABILITY_CHAT] },
+                { value: 'google/gemma-7b', label: '🧠 Gemma 7B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'Qwen/Qwen2-72B-Instruct', label: '🐴 Qwen 2 72B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'HuggingFaceH4/zephyr-7b-beta', label: '💨 Zephyr 7B', capabilities: [CAPABILITY_CHAT] },
+                { value: 'uncensored-com/unrestricted-gpt-oss-120b-lora', label: '🔓 Unrestricted GPT', capabilities: [CAPABILITY_CHAT] }
             ],
             pollinations: [
-                { value: 'flux', label: '🎨 Flux (Best)' },
-                { value: 'flux-realism', label: '📸 Flux Realism' },
-                { value: 'flux-anime', label: '🎌 Flux Anime' },
-                { value: 'flux-3d', label: '🎲 Flux 3D' },
-                { value: 'flux-cablyai', label: '🔮 Flux CablyAI' },
-                { value: 'turbo', label: '⚡ Turbo' },
-                { value: 'zimage', label: '🖼️ ZImage' },
-                { value: 'nova-fast', label: '💨 Nova Fast' },
-                { value: 'qwen-coder', label: '💻 Qwen Coder' },
-                { value: 'gemini-fast', label: '⚡ Gemini Fast' },
-                { value: 'mistrral', label: '🦙 Mistral' },
-                { value: 'grok', label: '🚀 Grok' },
-                { value: 'openai-fast', label: '🟢 OpenAI Fast' },
-                { value: 'wan', label: '🕸️ WAN' }
+                // Image models
+                { value: 'flux', label: '🎨 Flux (Best)', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'flux-realism', label: '📸 Flux Realism', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'flux-anime', label: '🎌 Flux Anime', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'flux-3d', label: '🎲 Flux 3D', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'flux-cablyai', label: '🔮 Flux CablyAI', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'turbo', label: '⚡ Turbo', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'zimage', label: '🖼️ ZImage', capabilities: [CAPABILITY_IMAGE] },
+                { value: 'nova-fast', label: '💨 Nova Fast', capabilities: [CAPABILITY_IMAGE] },
+                // Video models
+                { value: 'wan', label: '🎬 WAN (Video)', capabilities: [CAPABILITY_VIDEO] },
+                // Chat models
+                { value: 'qwen-coder', label: '💻 Qwen Coder', capabilities: [CAPABILITY_CHAT] },
+                { value: 'gemini-fast', label: '⚡ Gemini Fast', capabilities: [CAPABILITY_CHAT] },
+                { value: 'mistrral', label: '🦙 Mistral', capabilities: [CAPABILITY_CHAT] },
+                { value: 'grok', label: '🚀 Grok', capabilities: [CAPABILITY_CHAT] },
+                { value: 'openai-fast', label: '🟢 OpenAI Fast', capabilities: [CAPABILITY_CHAT] }
             ]
         };
 
@@ -1354,27 +1459,43 @@
             } else if (!conversationId) {
                 welcomeScreen.style.display = 'flex';
             }
+
+            // Filter models based on the selected mode/tab
+            updateModelsForMode(tab);
         }
 
-        // Provider descriptions
-        const providerDescriptions = {
-            mock: 'Testing provider - no API key needed',
-            openai: 'GPT-4o, GPT-3.5, o1, o3, and more',
-            gemini: 'Gemini 2.5 Flash, Gemma 3, and more - 15 RPM free',
-            groq: 'Llama 3.3 70B, Whisper, and more - 30 RPM free',
-            mistral: 'Mistral Small, Medium, Large, and Codestral',
-            huggingface: 'Llama 3, Mistral 7B, Gemma, and more',
-            pollinations: 'Flux, Turbo, and more - Free & unlimited images'
-        };
+        // Get capability for current mode
+        function getCapabilityForMode(mode) {
+            const modeCapabilities = {
+                'chat': CAPABILITY_CHAT,
+                'image': CAPABILITY_IMAGE,
+                'video': CAPABILITY_VIDEO
+            };
+            return modeCapabilities[mode] || CAPABILITY_CHAT;
+        }
 
-        // Update models based on provider
-        function updateModels() {
+        // Filter models by capability
+        function filterModelsByCapability(models, capability) {
+            return models.filter(m => m.capabilities && m.capabilities.includes(capability));
+        }
+
+        // Update models for the current mode
+        function updateModelsForMode(mode) {
             const provider = providerSelect.value;
-            const models = providerModels[provider] || [];
+            const capability = getCapabilityForMode(mode);
+            const allModels = providerModels[provider] || [];
+            const filteredModels = filterModelsByCapability(allModels, capability);
 
-            // Update provider info
+            // Update provider info with mode-specific info
             const providerInfo = document.getElementById('providerInfo');
-            providerInfo.innerHTML = `<strong>${providerDescriptions[provider] || ''}</strong>`;
+            const modeNames = { chat: 'Chat', image: 'Image', video: 'Video' };
+            const modeIcon = { chat: '💬', image: '🎨', video: '🎬' };
+
+            if (filteredModels.length === 0) {
+                providerInfo.innerHTML = `<strong>${modeIcon[mode]} ${modeNames[mode]} models</strong> - No ${mode} models available for this provider`;
+            } else {
+                providerInfo.innerHTML = `<strong>${modeIcon[mode]} ${modeNames[mode]} models</strong> - ${filteredModels.length} model(s) available`;
+            }
             providerInfo.style.animation = 'none';
             setTimeout(() => {
                 providerInfo.style.animation = 'slideIn 0.3s ease';
@@ -1385,7 +1506,7 @@
             modelSelect.style.transform = 'translateY(-10px)';
 
             setTimeout(() => {
-                modelSelect.innerHTML = models.map(m =>
+                modelSelect.innerHTML = filteredModels.map(m =>
                     `<option value="${m.value}">${m.label}</option>`
                 ).join('');
                 modelSelect.style.opacity = '1';
@@ -1393,7 +1514,12 @@
             }, 100);
 
             // Update model info
-            updateModelInfo(models[0]?.value);
+            updateModelInfo(filteredModels[0]?.value);
+        }
+
+        // Update models based on provider (maintains current mode filtering)
+        function updateModels() {
+            updateModelsForMode(currentTab);
         }
 
         // Update model info when model changes
@@ -1506,13 +1632,31 @@
             document.getElementById('moonIcon').classList.toggle('active', isDarkMode);
         }
 
+        // Configure marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function (code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            }
+        });
+
         // Add message to chat
         function addMessage(content, type, imageUrl = null, videoUrl = null) {
             welcomeScreen.style.display = 'none';
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
-            messageDiv.innerHTML = content;
+
+            // Render markdown for assistant messages
+            if (type === 'assistant' || type === 'system') {
+                messageDiv.innerHTML = `<div class="markdown-content">${marked.parse(content)}</div>`;
+            } else {
+                messageDiv.innerHTML = content;
+            }
 
             if (imageUrl) {
                 const img = document.createElement('img');
@@ -1623,19 +1767,40 @@
             `;
             gallery.scrollTop = gallery.scrollHeight;
 
-            // Use Pollinations for free image generation
-            const safePrompt = encodeURIComponent(prompt);
-            const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}`;
+            try {
+                // Use API endpoint with API key fallback
+                const response = await fetch('/api/image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt })
+                });
 
-            // Update to show actual image
-            const cards = gallery.querySelectorAll('.image-card');
-            cards[cards.length - 1].innerHTML = `
-                <img src="${imageUrl}" alt="${prompt}" onload="this.parentElement.querySelector('.loading-spinner')?.remove()" onerror="this.src='https://via.placeholder.com/400x400?text=Image+Generation+Failed'">
-                <div class="image-card-actions">
-                    <button class="image-card-btn" onclick="window.open('${imageUrl}', '_blank')">🔗 Open</button>
-                    <button class="image-card-btn" onclick="downloadImage('${imageUrl}', '${prompt}')">⬇️ Download</button>
-                </div>
-            `;
+                const data = await response.json();
+                const imageUrl = data.url;
+
+                // Update to show actual image
+                const cards = gallery.querySelectorAll('.image-card');
+                cards[cards.length - 1].innerHTML = `
+                    <img src="${imageUrl}" alt="${prompt}" onload="this.parentElement.querySelector('.loading-spinner')?.remove()" onerror="this.src='https://via.placeholder.com/400x400?text=Image+Generation+Failed'">
+                    <div class="image-card-actions">
+                        <button class="image-card-btn" onclick="window.open('${imageUrl}', '_blank')">🔗 Open</button>
+                        <button class="image-card-btn" onclick="downloadImage('${imageUrl}', '${prompt}')">⬇️ Download</button>
+                    </div>
+                `;
+            } catch (error) {
+                // Fallback to direct URL generation
+                const safePrompt = encodeURIComponent(prompt);
+                const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}`;
+
+                const cards = gallery.querySelectorAll('.image-card');
+                cards[cards.length - 1].innerHTML = `
+                    <img src="${imageUrl}" alt="${prompt}" onload="this.parentElement.querySelector('.loading-spinner')?.remove()" onerror="this.src='https://via.placeholder.com/400x400?text=Image+Generation+Failed'">
+                    <div class="image-card-actions">
+                        <button class="image-card-btn" onclick="window.open('${imageUrl}', '_blank')">🔗 Open</button>
+                        <button class="image-card-btn" onclick="downloadImage('${imageUrl}', '${prompt}')">⬇️ Download</button>
+                    </div>
+                `;
+            }
         }
 
         // Generate video (placeholder for now)

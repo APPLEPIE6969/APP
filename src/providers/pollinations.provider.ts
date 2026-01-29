@@ -8,6 +8,28 @@ import type {
     AIStreamChunk
 } from '../types/ai.js';
 
+// Generate image URL - tries anonymous first, falls back to API key on rate limit
+export async function generateImageWithFallback(prompt: string, apiKey?: string): Promise<string> {
+    const safePrompt = encodeURIComponent(prompt);
+
+    // First try anonymous access
+    let imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}`;
+
+    try {
+        // Try to make a HEAD request to check if anonymous is working
+        await axios.head(imageUrl, { timeout: 5000 });
+        return imageUrl;
+    } catch (error: any) {
+        // If anonymous is rate limited (429) or failed, use API key
+        if (error.response?.status === 429 || !apiKey) {
+            if (apiKey) {
+                imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?key=${apiKey}`;
+            }
+        }
+        return imageUrl;
+    }
+}
+
 export const pollinationsProvider: AIProvider = {
     name: 'pollinations',
     displayName: 'Pollinations AI (Free & Unlimited)',
@@ -36,14 +58,8 @@ export const pollinationsProvider: AIProvider = {
                     const lastMessage = messages[messages.length - 1];
                     const prompt = lastMessage?.content || 'a beautiful landscape';
 
-                    // Generate image URL with optional API key
-                    const safePrompt = encodeURIComponent(prompt);
-                    let imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}`;
-
-                    // Add API key if provided for better rate limits
-                    if (apiKey) {
-                        imageUrl += `?key=${apiKey}`;
-                    }
+                    // Generate image URL with fallback to API key
+                    const imageUrl = await generateImageWithFallback(prompt, apiKey);
 
                     // Return the image URL as content
                     return {
@@ -61,13 +77,8 @@ export const pollinationsProvider: AIProvider = {
                     const lastMessage = messages[messages.length - 1];
                     const prompt = lastMessage?.content || 'a beautiful landscape';
 
-                    const safePrompt = encodeURIComponent(prompt);
-                    let imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}`;
-
-                    // Add API key if provided for better rate limits
-                    if (apiKey) {
-                        imageUrl += `?key=${apiKey}`;
-                    }
+                    // Generate image URL with fallback to API key
+                    const imageUrl = await generateImageWithFallback(prompt, apiKey);
 
                     // Simulate streaming by yielding the URL in chunks
                     const message = `Image generated: ${imageUrl}`;
@@ -84,15 +95,14 @@ export const pollinationsProvider: AIProvider = {
     },
 };
 
-// Helper function to generate an image directly
-export async function generateImage(prompt: string, _model: string = 'flux'): Promise<string> {
-    const safePrompt = encodeURIComponent(prompt);
-    return `https://image.pollinations.ai/prompt/${safePrompt}`;
+// Helper function to generate an image directly (with API key fallback)
+export async function generateImage(prompt: string, apiKey?: string, _model: string = 'flux'): Promise<string> {
+    return generateImageWithFallback(prompt, apiKey);
 }
 
 // Helper function to download an image from Pollinations
-export async function downloadImage(prompt: string, outputPath: string, _model: string = 'flux'): Promise<void> {
-    const imageUrl = await generateImage(prompt);
+export async function downloadImage(prompt: string, outputPath: string, apiKey?: string, _model: string = 'flux'): Promise<void> {
+    const imageUrl = await generateImageWithFallback(prompt, apiKey);
     const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
 
     const fs = await import('fs');

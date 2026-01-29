@@ -6,6 +6,8 @@ import { pluginManager } from '../core/PluginManager.js';
 import { integrationManager } from '../core/IntegrationManager.js';
 import { ConfigManager } from '../config/ConfigManager.js';
 import { logger } from '../utils/Logger.js';
+import { generateImageWithFallback } from '../providers/pollinations.provider.js';
+import { apiKeyManager } from '../core/ApiKeyManager.js';
 
 export class Server {
     private app: express.Application;
@@ -67,6 +69,36 @@ export class Server {
                 });
             } catch (error) {
                 logger.error('Chat error', error);
+                res.status(500).json({
+                    error: error instanceof Error ? error.message : 'Internal server error',
+                });
+            }
+        });
+
+        // Image generation endpoint (with API key fallback)
+        this.app.post('/api/image', async (req, res): Promise<void> => {
+            try {
+                const { prompt, model } = req.body;
+
+                if (!prompt) {
+                    res.status(400).json({ error: 'Prompt is required' });
+                    return;
+                }
+
+                // Get Pollinations API key from .env or database
+                let apiKey: string | undefined = process.env.POLLINATIONS_API_KEY;
+                if (!apiKey) {
+                    await apiKeyManager.initialize();
+                    const dbKey = await apiKeyManager.getDecryptedKeyByProvider('pollinations');
+                    if (dbKey) apiKey = dbKey;
+                }
+
+                // Generate image with API key fallback
+                const imageUrl = await generateImageWithFallback(prompt, apiKey);
+
+                res.json({ url: imageUrl });
+            } catch (error) {
+                logger.error('Image generation error', error);
                 res.status(500).json({
                     error: error instanceof Error ? error.message : 'Internal server error',
                 });
