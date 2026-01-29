@@ -20,7 +20,9 @@ export class ApiKeyManager {
 
     private constructor() {
         this.keysFile = path.join(process.cwd(), 'data', 'api-keys.json');
-        this.encryptionKey = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+        // Derive a proper 32-byte key from the environment variable using SHA-256
+        const rawKey = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+        this.encryptionKey = crypto.createHash('sha256').update(rawKey).digest('hex').slice(0, 32);
     }
 
     public static getInstance(): ApiKeyManager {
