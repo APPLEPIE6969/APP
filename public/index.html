@@ -132,6 +132,21 @@
             --message-assistant: #1e293b;
         }
 
+        [data-theme="oled"] {
+            --bg-primary: #000000;
+            --bg-secondary: #0a0a0a;
+            --bg-tertiary: #1a1a1a;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --accent-primary: #818cf8;
+            --accent-secondary: #a78bfa;
+            --border-color: #1a1a1a;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+            --message-user: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            --message-assistant: #0a0a0a;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -1154,6 +1169,7 @@
                     <div class="theme-icons">
                         <span class="theme-icon active" id="sunIcon">☀️</span>
                         <span class="theme-icon" id="moonIcon">🌙</span>
+                        <span class="theme-icon" id="oledIcon">⬛</span>
                     </div>
                 </button>
             </div>
@@ -1613,23 +1629,32 @@
             }
         }
 
-        // Theme toggle
+        // Theme toggle - cycles through Light → Dark → OLED → Light
+        const themes = ['light', 'dark', 'oled'];
+
         function toggleTheme() {
-            isDarkMode = !isDarkMode;
-            document.documentElement.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
-            document.getElementById('themeLabel').textContent = isDarkMode ? 'Dark Mode' : 'Light Mode';
-            document.getElementById('sunIcon').classList.toggle('active', !isDarkMode);
-            document.getElementById('moonIcon').classList.toggle('active', isDarkMode);
-            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+            const currentIndex = themes.indexOf(localStorage.getItem('theme') || 'light');
+            const nextIndex = (currentIndex + 1) % themes.length;
+            const newTheme = themes[nextIndex];
+
+            document.documentElement.setAttribute('data-theme', newTheme);
+            updateThemeUI(newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        function updateThemeUI(theme) {
+            const labels = { light: 'Light Mode', dark: 'Dark Mode', oled: 'OLED Mode' };
+            document.getElementById('themeLabel').textContent = labels[theme] || 'Light Mode';
+
+            document.getElementById('sunIcon').classList.toggle('active', theme === 'light');
+            document.getElementById('moonIcon').classList.toggle('active', theme === 'dark');
+            document.getElementById('oledIcon').classList.toggle('active', theme === 'oled');
         }
 
         function loadTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
-            isDarkMode = savedTheme === 'dark';
             document.documentElement.setAttribute('data-theme', savedTheme);
-            document.getElementById('themeLabel').textContent = isDarkMode ? 'Dark Mode' : 'Light Mode';
-            document.getElementById('sunIcon').classList.toggle('active', !isDarkMode);
-            document.getElementById('moonIcon').classList.toggle('active', isDarkMode);
+            updateThemeUI(savedTheme);
         }
 
         // Configure marked.js
