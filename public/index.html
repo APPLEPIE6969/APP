@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -186,7 +187,8 @@
             margin-bottom: 12px;
         }
 
-        .provider-select, .model-select {
+        .provider-select,
+        .model-select {
             width: 100%;
             padding: 12px 14px;
             background: var(--bg-tertiary);
@@ -204,14 +206,45 @@
             background-size: 16px;
         }
 
-        .provider-select:hover, .model-select:hover {
+        .model-select {
+            opacity: 1;
+            transform: translateY(0);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .provider-select:hover,
+        .model-select:hover {
             border-color: var(--accent-primary);
         }
 
-        .provider-select:focus, .model-select:focus {
+        .provider-select:focus,
+        .model-select:focus {
             outline: none;
             border-color: var(--accent-primary);
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .provider-selector-wrapper,
+        .model-selector-wrapper {
+            position: relative;
+        }
+
+        .provider-info,
+        .model-info {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            animation: slideIn 0.3s ease;
+        }
+
+        .provider-info strong,
+        .model-info strong {
+            color: var(--accent-primary);
+            display: block;
+            margin-bottom: 4px;
         }
 
         .tools-list {
@@ -327,8 +360,17 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
         }
 
         .header-actions {
@@ -382,6 +424,7 @@
                 opacity: 0;
                 transform: translateY(20px) scale(0.95);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0) scale(1);
@@ -492,8 +535,16 @@
         }
 
         @keyframes typing {
-            0%, 60%, 100% { transform: translateY(0); }
-            30% { transform: translateY(-6px); }
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-6px);
+            }
         }
 
         /* Input Container */
@@ -620,8 +671,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
         }
 
         .welcome-title {
@@ -833,7 +891,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Image generation section */
@@ -892,8 +952,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .image-card:hover {
@@ -931,6 +998,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <!-- Sidebar -->
@@ -962,18 +1030,24 @@
 
             <div class="sidebar-section">
                 <div class="section-title">AI Provider</div>
-                <select class="provider-select" id="providerSelect">
-                    <option value="mock">🤖 Mock AI (Testing)</option>
-                    <option value="openai">🟢 OpenAI</option>
-                    <option value="gemini">🔵 Google Gemini</option>
-                    <option value="groq">🟣 Groq (Fastest)</option>
-                    <option value="mistral">🔷 Mistral AI</option>
-                    <option value="huggingface">🟡 Hugging Face</option>
-                    <option value="pollinations">🌸 Pollinations (Images)</option>
-                </select>
+                <div class="provider-selector-wrapper">
+                    <select class="provider-select" id="providerSelect">
+                        <option value="mock">🤖 Mock AI (Testing)</option>
+                        <option value="openai">🟢 OpenAI</option>
+                        <option value="gemini">🔵 Google Gemini</option>
+                        <option value="groq">🟣 Groq (Fastest)</option>
+                        <option value="mistral">🔷 Mistral AI</option>
+                        <option value="huggingface">🟡 Hugging Face</option>
+                        <option value="pollinations">🌸 Pollinations (Images)</option>
+                    </select>
+                    <div class="provider-info" id="providerInfo"></div>
+                </div>
 
                 <div class="section-title">Model</div>
-                <select class="model-select" id="modelSelect"></select>
+                <div class="model-selector-wrapper">
+                    <select class="model-select" id="modelSelect"></select>
+                    <div class="model-info" id="modelInfo"></div>
+                </div>
 
                 <div class="section-title">Available Tools</div>
                 <div class="tools-list" id="toolsList"></div>
@@ -1016,7 +1090,8 @@
                 <div class="welcome-screen" id="welcomeScreen">
                     <div class="welcome-icon">🤖</div>
                     <h1 class="welcome-title">Smart AI Assistant</h1>
-                    <p class="welcome-subtitle">Your intelligent companion for chat, images, and more. Powered by multiple AI providers including free options!</p>
+                    <p class="welcome-subtitle">Your intelligent companion for chat, images, and more. Powered by
+                        multiple AI providers including free options!</p>
                     <div class="suggestions">
                         <button class="suggestion-btn" onclick="useSuggestion('Create a stunning sunset landscape')">
                             <span class="suggestion-icon">🌅</span>
@@ -1042,9 +1117,11 @@
             <div class="chat-container" id="imageContainer" style="display: none;">
                 <div class="welcome-screen" style="padding: 20px;">
                     <h2 style="margin-bottom: 20px;">🎨 Image Generation</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Describe the image you want to create</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Describe the image you want to create
+                    </p>
                     <div class="image-input-container" style="max-width: 600px;">
-                        <input type="text" class="image-input" id="imagePrompt" placeholder="A beautiful sunset over the ocean..." style="flex: 1;">
+                        <input type="text" class="image-input" id="imagePrompt"
+                            placeholder="A beautiful sunset over the ocean..." style="flex: 1;">
                         <button class="generate-btn" onclick="generateImage()">Generate</button>
                     </div>
                     <div class="image-gallery" id="imageGallery"></div>
@@ -1055,9 +1132,11 @@
             <div class="chat-container" id="videoContainer" style="display: none;">
                 <div class="welcome-screen" style="padding: 20px;">
                     <h2 style="margin-bottom: 20px;">🎬 Video Generation</h2>
-                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Describe the video you want to create</p>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Describe the video you want to create
+                    </p>
                     <div class="image-input-container" style="max-width: 600px;">
-                        <input type="text" class="image-input" id="videoPrompt" placeholder="A cinematic drone shot of mountains..." style="flex: 1;">
+                        <input type="text" class="image-input" id="videoPrompt"
+                            placeholder="A cinematic drone shot of mountains..." style="flex: 1;">
                         <button class="generate-btn" onclick="generateVideo()">Generate</button>
                     </div>
                     <div class="image-gallery" id="videoGallery"></div>
@@ -1067,7 +1146,8 @@
             <!-- Input Area -->
             <div class="input-container" id="inputContainer">
                 <div class="input-wrapper">
-                    <textarea class="input-box" id="messageInput" placeholder="Type your message..." rows="1"></textarea>
+                    <textarea class="input-box" id="messageInput" placeholder="Type your message..."
+                        rows="1"></textarea>
                     <button class="send-btn" id="sendButton" onclick="sendMessage()">➤</button>
                 </div>
                 <div class="input-actions">
@@ -1093,7 +1173,8 @@
                 <button class="modal-close" onclick="closeApiKeyModal()">×</button>
             </div>
             <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">Provider</label>
+                <label
+                    style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">Provider</label>
                 <select class="api-key-input" id="keyProvider">
                     <option value="openai">OpenAI</option>
                     <option value="gemini">Google Gemini</option>
@@ -1103,12 +1184,15 @@
                 </select>
             </div>
             <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">API Key</label>
+                <label style="display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-secondary);">API
+                    Key</label>
                 <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Enter your API key...">
             </div>
             <button class="save-btn" onclick="saveApiKey()">Save API Key</button>
-            <div style="margin-top: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 10px; font-size: 13px; color: var(--text-secondary);">
-                💡 <strong>Tip:</strong> For free AI, use Mock AI (no key needed), Pollinations (no key), or add keys for Gemini/Groq.
+            <div
+                style="margin-top: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 10px; font-size: 13px; color: var(--text-secondary);">
+                💡 <strong>Tip:</strong> For free AI, use Mock AI (no key needed), Pollinations (no key), or add keys
+                for Gemini/Groq.
             </div>
         </div>
     </div>
@@ -1217,7 +1301,7 @@
             loadTools();
             updateModels();
             loadTheme();
-            
+
             // Tab switching
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
@@ -1225,6 +1309,11 @@
 
             // Provider change
             providerSelect.addEventListener('change', updateModels);
+
+            // Model change
+            modelSelect.addEventListener('change', (e) => {
+                updateModelInfo(e.target.value);
+            });
 
             // Auto-resize textarea
             messageInput.addEventListener('input', () => {
@@ -1247,7 +1336,7 @@
         // Tab switching
         function switchTab(tab) {
             currentTab = tab;
-            
+
             document.querySelectorAll('.tab').forEach(t => {
                 t.classList.toggle('active', t.dataset.tab === tab);
             });
@@ -1256,7 +1345,7 @@
             imageContainer.style.display = tab === 'image' ? 'flex' : 'none';
             videoContainer.style.display = tab === 'video' ? 'flex' : 'none';
             inputContainer.style.display = tab === 'chat' ? 'block' : 'none';
-            
+
             const titles = { chat: '💬 Chat', image: '🎨 Image Generation', video: '🎬 Video Generation' };
             headerTitle.textContent = titles[tab];
 
@@ -1267,13 +1356,119 @@
             }
         }
 
+        // Provider descriptions
+        const providerDescriptions = {
+            mock: 'Testing provider - no API key needed',
+            openai: 'GPT-4o, GPT-3.5, o1, o3, and more',
+            gemini: 'Gemini 2.5 Flash, Gemma 3, and more - 15 RPM free',
+            groq: 'Llama 3.3 70B, Whisper, and more - 30 RPM free',
+            mistral: 'Mistral Small, Medium, Large, and Codestral',
+            huggingface: 'Llama 3, Mistral 7B, Gemma, and more',
+            pollinations: 'Flux, Turbo, and more - Free & unlimited images'
+        };
+
         // Update models based on provider
         function updateModels() {
             const provider = providerSelect.value;
             const models = providerModels[provider] || [];
-            modelSelect.innerHTML = models.map(m => 
-                `<option value="${m.value}">${m.label}</option>`
-            ).join('');
+
+            // Update provider info
+            const providerInfo = document.getElementById('providerInfo');
+            providerInfo.innerHTML = `<strong>${providerDescriptions[provider] || ''}</strong>`;
+            providerInfo.style.animation = 'none';
+            setTimeout(() => {
+                providerInfo.style.animation = 'slideIn 0.3s ease';
+            }, 10);
+
+            // Update model select with animation
+            modelSelect.style.opacity = '0';
+            modelSelect.style.transform = 'translateY(-10px)';
+
+            setTimeout(() => {
+                modelSelect.innerHTML = models.map(m =>
+                    `<option value="${m.value}">${m.label}</option>`
+                ).join('');
+                modelSelect.style.opacity = '1';
+                modelSelect.style.transform = 'translateY(0)';
+            }, 100);
+
+            // Update model info
+            updateModelInfo(models[0]?.value);
+        }
+
+        // Update model info when model changes
+        function updateModelInfo(modelValue) {
+            const modelInfo = document.getElementById('modelInfo');
+            if (!modelValue) {
+                modelInfo.innerHTML = '';
+                return;
+            }
+
+            const modelDescriptions = {
+                'gpt-4o-mini': '⚡ Fast & efficient - Great for quick responses',
+                'gpt-4o': '🚀 Most capable - Best for complex tasks',
+                'gpt-3.5-turbo': '🔥 Fast & reliable - Good balance of speed and quality',
+                'o1': '🧠 Advanced reasoning - Best for complex problems',
+                'o1-mini': '⚡ Fast reasoning - Quick and efficient',
+                'o3': '🧠 Most advanced - Best for challenging tasks',
+                'o3-mini': '⚡ Fast advanced - Quick and powerful',
+                'o4-mini': '💨 Ultra-fast - Lightning quick responses',
+                'gemini-2.5-flash': '⚡ Latest & fastest - 1M context window',
+                'gemini-2.5-flash-lite': '💨 Lightweight - Quick and efficient',
+                'gemini-3-flash-preview': '🚀 Next-gen preview - Experimental features',
+                'gemma-3-27b-it': '🦙 Largest model - Best for complex reasoning',
+                'gemma-3-12b-it': '💪 Balanced - Good performance and speed',
+                'gemma-3-4b-it': '⚡ Fast - Quick responses',
+                'gemma-3-2b-it': '💨 Ultra-light - Fastest option',
+                'gemma-3-1b-it': '✨ Tiny - Minimal resource usage',
+                'llama-3.3-70b-versatile': '🦙 Most capable - Best for general use',
+                'llama-3.1-8b-instant': '⚡ Instant - Super fast responses',
+                'allam-2-7b': '🌙 Arabic AI - Specialized for Arabic',
+                'groq/compound': '🧪 Compound - Enhanced capabilities',
+                'groq/compound-mini': '💨 Compound Mini - Fast & efficient',
+                'meta-llama/llama-4-maverick-17b-128e-instruct': '🦙 Maverick - Advanced reasoning',
+                'meta-llama/llama-4-scout-17b-16e-instruct': '🔭 Scout - Fast and efficient',
+                'meta-llama/llama-guard-4-12b': '🛡️ Guard - Safety focused',
+                'meta-llama/llama-prompt-guard-2-22m': '🔒 Prompt Guard - Security',
+                'meta-llama/llama-prompt-guard-2-86m': '🔐 Prompt Guard - Enhanced security',
+                'qwen/qwen3-32b': '🐴 Powerful - 32B parameter model',
+                'whisper-large-v3': '🎤 Best accuracy - High quality transcription',
+                'whisper-large-v3-turbo': '💨 Turbo - Fast transcription',
+                'mistral-small-latest': '⚡ Small - Fast and efficient',
+                'mistral-medium-latest': '🚀 Medium - Balanced performance',
+                'mistral-large-latest': '💪 Large - Best for complex tasks',
+                'codestral-latest': '💻 Coding specialist - Best for code',
+                'open-mistral-7b': '🦙 Open source - Good performance',
+                'open-mixtral-8x7b': '🦙 Mixtral - Strong performance',
+                'ministral-14b-2512': '💨 Ministral - Lightweight and fast',
+                'meta-llama/Llama-3-8b': '🦙 8B - Efficient and capable',
+                'meta-llama/Llama-3-70b': '🦙 70B - Most powerful',
+                'mistralai/Mistral-7B-Instruct-v0.3': '🦙 7B Instruct - Good for chat',
+                'google/gemma-7b': '🧠 Gemma 7B - Balanced model',
+                'Qwen/Qwen2-72B-Instruct': '🐴 Qwen 2 72B - Large and capable',
+                'HuggingFaceH4/zephyr-7b-beta': '💨 Zephyr 7B - Fast and efficient',
+                'uncensored-com/unrestricted-gpt-oss-120b-lora': '🔓 Unrestricted - No content filters',
+                'flux': '🎨 Flux - Best quality image generation',
+                'flux-realism': '📸 Flux Realism - Photorealistic images',
+                'flux-anime': '🎌 Flux Anime - Anime style images',
+                'flux-3d': '🎲 Flux 3D - 3D style images',
+                'flux-cablyai': '🔮 Flux CablyAI - Enhanced quality',
+                'turbo': '⚡ Turbo - Ultra-fast image generation',
+                'zimage': '🖼️ ZImage - Fast image generation',
+                'nova-fast': '💨 Nova Fast - Quick text-to-image',
+                'qwen-coder': '💻 Qwen Coder - Code generation',
+                'gemini-fast': '⚡ Gemini Fast - Fast with search',
+                'mistrral': '🦙 Mistral - Good for images',
+                'grok': '🚀 Grok - Fast reasoning',
+                'openai-fast': '🟢 OpenAI Fast - Quick responses',
+                'wan': '🕸️ WAN - Video generation'
+            };
+
+            modelInfo.innerHTML = `<strong>${modelDescriptions[modelValue] || ''}</strong>`;
+            modelInfo.style.animation = 'none';
+            setTimeout(() => {
+                modelInfo.style.animation = 'slideIn 0.3s ease';
+            }, 10);
         }
 
         // Load available tools
@@ -1314,18 +1509,18 @@
         // Add message to chat
         function addMessage(content, type, imageUrl = null, videoUrl = null) {
             welcomeScreen.style.display = 'none';
-            
+
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${type}`;
             messageDiv.innerHTML = content;
-            
+
             if (imageUrl) {
                 const img = document.createElement('img');
                 img.src = imageUrl;
                 img.className = 'message-image';
                 messageDiv.appendChild(img);
             }
-            
+
             if (videoUrl) {
                 const video = document.createElement('video');
                 video.src = videoUrl;
@@ -1341,7 +1536,7 @@
                 <button class="message-action-btn" onclick="regenerateMessage()">🔄 Retry</button>
             `;
             messageDiv.appendChild(actionsDiv);
-            
+
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
@@ -1385,7 +1580,7 @@
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         message,
                         conversationId,
                         provider: providerSelect.value,
@@ -1394,7 +1589,7 @@
                 });
 
                 const data = await response.json();
-                
+
                 if (data.conversationId) {
                     conversationId = data.conversationId;
                 }
@@ -1527,7 +1722,7 @@
         async function saveApiKey() {
             const provider = document.getElementById('keyProvider').value;
             const key = document.getElementById('apiKeyInput').value.trim();
-            
+
             if (!key) {
                 alert('Please enter an API key');
                 return;
@@ -1539,7 +1734,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name: provider, provider, apiKey: key })
                 });
-                
+
                 apiKeys[provider] = key;
                 closeApiKeyModal();
                 alert(`API key for ${provider} saved successfully!`);
@@ -1580,4 +1775,5 @@
         }
     </script>
 </body>
+
 </html>
