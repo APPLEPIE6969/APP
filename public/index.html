@@ -307,7 +307,7 @@
             font-size: 14px;
             color: var(--text-primary);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             margin-bottom: 12px;
             appearance: none;
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -319,7 +319,124 @@
         .model-select {
             opacity: 1;
             transform: translateY(0);
-            transition: opacity 0.2s ease, transform 0.2s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .model-select.loading {
+            opacity: 0.6;
+            transform: translateY(-5px);
+            pointer-events: none;
+        }
+
+        /* Custom Animated Dropdown */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .dropdown-selected {
+            width: 100%;
+            padding: 12px 14px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dropdown-selected:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .dropdown-selected .dropdown-arrow {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-dropdown.open .dropdown-selected .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+
+        .dropdown-options {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            right: 0;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow-lg);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px) scale(0.95);
+            visibility: hidden;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .custom-dropdown.open .dropdown-options {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            visibility: visible;
+        }
+
+        .dropdown-option {
+            padding: 12px 14px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dropdown-option:first-child {
+            border-radius: 10px 10px 0 0;
+        }
+
+        .dropdown-option:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .dropdown-option:hover {
+            background: var(--bg-tertiary);
+            padding-left: 18px;
+        }
+
+        .dropdown-option.selected {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .dropdown-option .model-icon {
+            font-size: 16px;
+        }
+
+        .dropdown-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s ease;
+            z-index: 999;
+        }
+
+        .dropdown-backdrop.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         .provider-select:hover,
@@ -1403,6 +1520,7 @@
         let currentTab = 'chat';
         let isDarkMode = false;
         let apiKeys = {};
+        let modelDropdownOpen = false;
 
         // DOM Elements
         const chatContainer = document.getElementById('chatContainer');
@@ -1417,15 +1535,188 @@
         const headerTitle = document.getElementById('headerTitle');
         const inputContainer = document.getElementById('inputContainer');
 
+        // Custom Animated Dropdown Functions
+        function createModelDropdown() {
+            const wrapper = document.querySelector('.model-selector-wrapper');
+            if (!wrapper) return;
+
+            // Create custom dropdown structure
+            const customDropdown = document.createElement('div');
+            customDropdown.className = 'custom-dropdown';
+            customDropdown.id = 'modelCustomDropdown';
+
+            const selected = document.createElement('div');
+            selected.className = 'dropdown-selected';
+            selected.innerHTML = `
+                <span id="dropdownSelectedText">Select Model</span>
+                <span class="dropdown-arrow">▼</span>
+            `;
+
+            const options = document.createElement('div');
+            options.className = 'dropdown-options';
+            options.id = 'dropdownOptions';
+
+            const backdrop = document.createElement('div');
+            backdrop.className = 'dropdown-backdrop';
+            backdrop.id = 'dropdownBackdrop';
+
+            customDropdown.appendChild(selected);
+            customDropdown.appendChild(options);
+            wrapper.appendChild(backdrop);
+
+            // Add after the original select (which we hide)
+            const originalSelect = document.getElementById('modelSelect');
+            if (originalSelect) {
+                originalSelect.style.display = 'none';
+                wrapper.insertBefore(customDropdown, originalSelect);
+            }
+
+            // Event listeners
+            selected.addEventListener('click', toggleModelDropdown);
+            backdrop.addEventListener('click', closeModelDropdown);
+
+            // Populate initial options
+            populateModelDropdown();
+        }
+
+        function populateModelDropdown() {
+            const options = document.getElementById('dropdownOptions');
+            const selectedText = document.getElementById('dropdownSelectedText');
+            const currentValue = modelSelect?.value;
+
+            if (!options || !modelSelect) return;
+
+            const optionsHtml = [];
+            for (const option of modelSelect.options) {
+                const isSelected = option.value === currentValue;
+                const icon = option.text.split(' ')[0] || '🤖';
+                const label = option.text.substring(option.text.indexOf(' ') + 1) || option.text;
+
+                optionsHtml.push(`
+                    <div class="dropdown-option ${isSelected ? 'selected' : ''}" 
+                         data-value="${option.value}" 
+                         onclick="selectModelOption('${option.value}')">
+                        <span class="model-icon">${icon}</span>
+                        <span>${label}</span>
+                    </div>
+                `);
+            }
+
+            options.innerHTML = optionsHtml.join('');
+
+            // Update selected text
+            const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+            if (selectedOption && selectedText) {
+                const icon = selectedOption.text.split(' ')[0] || '🤖';
+                const label = selectedOption.text.substring(selectedOption.text.indexOf(' ') + 1) || selectedOption.text;
+                selectedText.innerHTML = `<span class="model-icon">${icon}</span> ${label}`;
+            }
+        }
+
+        function toggleModelDropdown() {
+            const dropdown = document.getElementById('modelCustomDropdown');
+            const backdrop = document.getElementById('dropdownBackdrop');
+
+            if (!dropdown || !backdrop) return;
+
+            if (dropdown.classList.contains('open')) {
+                closeModelDropdown();
+            } else {
+                dropdown.classList.add('open');
+                backdrop.classList.add('active');
+                modelDropdownOpen = true;
+
+                // Animate options stagger
+                const options = dropdown.querySelectorAll('.dropdown-option');
+                options.forEach((opt, i) => {
+                    opt.style.opacity = '0';
+                    opt.style.transform = 'translateX(-10px)';
+                    setTimeout(() => {
+                        opt.style.transition = 'all 0.2s ease';
+                        opt.style.opacity = '1';
+                        opt.style.transform = 'translateX(0)';
+                    }, i * 30);
+                });
+            }
+        }
+
+        function closeModelDropdown() {
+            const dropdown = document.getElementById('modelCustomDropdown');
+            const backdrop = document.getElementById('dropdownBackdrop');
+
+            if (!dropdown || !backdrop) return;
+
+            dropdown.classList.remove('open');
+            backdrop.classList.remove('active');
+            modelDropdownOpen = false;
+        }
+
+        function selectModelOption(value) {
+            modelSelect.value = value;
+            updateModelInfo(value);
+            closeModelDropdown();
+
+            // Animate selection
+            const selectedText = document.getElementById('dropdownSelectedText');
+            if (selectedText) {
+                selectedText.style.transform = 'scale(0.95)';
+                setTimeout(() => selectedText.style.transform = 'scale(1)', 150);
+            }
+
+            // Trigger change event
+            modelSelect.dispatchEvent(new Event('change'));
+        }
+
+        // Re-populate dropdown when models change
+        const originalUpdateModelsForMode = updateModelsForMode;
+        updateModelsForMode = function (mode) {
+            originalUpdateModelsForMode(mode);
+
+            // Add loading animation
+            const dropdown = document.getElementById('modelCustomDropdown');
+            if (dropdown) {
+                dropdown.classList.add('loading');
+                setTimeout(() => {
+                    dropdown.classList.remove('loading');
+                    populateModelDropdown();
+
+                    // Animate entrance
+                    const options = dropdown.querySelectorAll('.dropdown-option');
+                    options.forEach((opt, i) => {
+                        opt.style.opacity = '0';
+                        opt.style.transform = 'translateY(-10px)';
+                        setTimeout(() => {
+                            opt.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
+                            opt.style.opacity = '1';
+                            opt.style.transform = 'translateY(0)';
+                        }, i * 20);
+                    });
+                }, 200);
+            }
+        };
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             loadTools();
             updateModels();
             loadTheme();
 
+            // Initialize custom dropdown after a short delay
+            setTimeout(createModelDropdown, 100);
+
             // Tab switching
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+            });
+
+            // Provider change
+            providerSelect.addEventListener('change', updateModels);
+
+            // Close dropdown on escape key
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modelDropdownOpen) {
+                    closeModelDropdown();
+                }
             });
 
             // Provider change
