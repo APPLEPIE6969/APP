@@ -4,8 +4,23 @@ import { pluginManager } from '../src/core/PluginManager.js';
 import { integrationManager } from '../src/core/IntegrationManager.js';
 import { aiProviderManager } from '../src/core/AIProviderManager.js';
 import { logger } from '../src/utils/Logger.js';
-import { generateImageWithFallback } from '../src/providers/pollinations.provider.js';
+import { generateImageWithFallback, pollinationsProvider } from '../src/providers/pollinations.provider.js';
+import { openAIProvider } from '../src/providers/openai.provider.js';
+import { mockProvider } from '../src/providers/mock.provider.js';
+import { geminiProvider } from '../src/providers/gemini.provider.js';
+import { groqProvider } from '../src/providers/groq.provider.js';
+import { mistralProvider } from '../src/providers/mistral.provider.js';
+import { huggingFaceProvider } from '../src/providers/huggingface.provider.js';
 import type { AIModelConfig, AIMessage } from '../src/types/ai.js';
+
+// Register AI providers
+aiProviderManager.registerProvider(openAIProvider);
+aiProviderManager.registerProvider(mockProvider);
+aiProviderManager.registerProvider(geminiProvider);
+aiProviderManager.registerProvider(groqProvider);
+aiProviderManager.registerProvider(mistralProvider);
+aiProviderManager.registerProvider(huggingFaceProvider);
+aiProviderManager.registerProvider(pollinationsProvider);
 
 // Map provider names to environment variable names
 const PROVIDER_API_KEYS: Record<string, string | undefined> = {
