@@ -43,7 +43,7 @@ Always be helpful, accurate, and efficient. If you're unsure about something, as
 Current date and time: ${new Date().toISOString()}`;
 
 export class Server {
-    private app: express.Application;
+    public app: express.Application;
     private server: any;
     private wss: WebSocketServer;
     private config: ConfigManager;
