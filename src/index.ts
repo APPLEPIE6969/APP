@@ -91,6 +91,9 @@ program
         }
     });
 
+// Export Express app for Vercel
+export { Server } from './server/Server.js';
+
 program
     .command('chat')
     .description('Quick chat mode (single message)')
