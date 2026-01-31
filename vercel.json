@@ -13,17 +13,10 @@
             }
         }
     ],
-    "routes": [
+    "rewrites": [
         {
-            "source": "/api/(.*)",
-            "dest": "src/index.ts"
-        },
-        {
-            "handle": "filesystem"
-        },
-        {
-            "source": "/(.*)",
-            "dest": "/index.html"
+            "source": "/api/:path*",
+            "destination": "/src/index.ts"
         }
     ]
 }
