@@ -4,26 +4,10 @@ import { pluginManager } from '../src/core/PluginManager.js';
 import { integrationManager } from '../src/core/IntegrationManager.js';
 import { aiProviderManager } from '../src/core/AIProviderManager.js';
 import { logger } from '../src/utils/Logger.js';
-import { generateImageWithFallback, pollinationsProvider } from '../src/providers/pollinations.provider.js';
-import { openAIProvider } from '../src/providers/openai.provider.js';
-import { mockProvider } from '../src/providers/mock.provider.js';
-import { geminiProvider } from '../src/providers/gemini.provider.js';
-import { groqProvider } from '../src/providers/groq.provider.js';
-import { mistralProvider } from '../src/providers/mistral.provider.js';
-import { huggingFaceProvider } from '../src/providers/huggingface.provider.js';
-import type { AIModelConfig, AIMessage } from '../src/types/ai.js';
-
-// Register AI providers
-aiProviderManager.registerProvider(openAIProvider);
-aiProviderManager.registerProvider(mockProvider);
-aiProviderManager.registerProvider(geminiProvider);
-aiProviderManager.registerProvider(groqProvider);
-aiProviderManager.registerProvider(mistralProvider);
-aiProviderManager.registerProvider(huggingFaceProvider);
-aiProviderManager.registerProvider(pollinationsProvider);
+import { generateImageWithFallback } from '../src/providers/pollinations.provider.js';
 
 // Map provider names to environment variable names
-const PROVIDER_API_KEYS: Record<string, string | undefined> = {
+const PROVIDER_API_KEYS = {
     'openai': 'OPENAI_API_KEY',
     'gemini': 'GEMINI_API_KEY',
     'groq': 'GROQ_API_KEY',
@@ -63,7 +47,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Get API key for a provider from environment variables
-function getApiKeyForProvider(provider: string): string | undefined {
+function getApiKeyForProvider(provider) {
     const envKey = PROVIDER_API_KEYS[provider];
     if (envKey) {
         return process.env[envKey];
@@ -71,13 +55,8 @@ function getApiKeyForProvider(provider: string): string | undefined {
     return undefined;
 }
 
-// Health check
-app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
 // Chat endpoint - supports all providers (OpenAI, Gemini, Groq, Mistral, etc.)
-app.post('/api/chat', async (req, res): Promise<void> => {
+app.post('/api/chat', async (req, res) => {
     try {
         const { message, conversationId, provider, model } = req.body;
 
@@ -102,7 +81,7 @@ app.post('/api/chat', async (req, res): Promise<void> => {
         }
 
         // Configure the provider
-        const config: AIModelConfig = {
+        const config = {
             provider,
             model: model || providerInfo.models[0],
             apiKey,
@@ -113,7 +92,7 @@ app.post('/api/chat', async (req, res): Promise<void> => {
         await aiProviderManager.setProvider(config);
 
         // Prepare messages
-        const messages: AIMessage[] = [
+        const messages = [
             { role: 'system', content: SYSTEM_PROMPT },
             { role: 'user', content: message },
         ];
@@ -138,7 +117,7 @@ app.post('/api/chat', async (req, res): Promise<void> => {
 });
 
 // Image generation endpoint (with API key fallback)
-app.post('/api/image', async (req, res): Promise<void> => {
+app.post('/api/image', async (req, res) => {
     try {
         const { prompt } = req.body;
 
@@ -163,7 +142,7 @@ app.post('/api/image', async (req, res): Promise<void> => {
 });
 
 // Conversation management (simplified - no storage, just returns temp ID)
-app.post('/api/conversations', async (_req, res): Promise<void> => {
+app.post('/api/conversations', async (req, res) => {
     try {
         const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         res.json({ conversationId });
@@ -176,7 +155,7 @@ app.post('/api/conversations', async (_req, res): Promise<void> => {
 });
 
 // Stats endpoint
-app.get('/api/stats', (_req, res) => {
+app.get('/api/stats', (req, res) => {
     const providers = aiProviderManager.getProviders();
     const pluginStats = pluginManager.getPluginStats();
     const integrationStats = integrationManager.getStats();
@@ -192,7 +171,7 @@ app.get('/api/stats', (_req, res) => {
 });
 
 // API Key management endpoints
-app.get('/api/keys', async (_req, res) => {
+app.get('/api/keys', async (req, res) => {
     try {
         const { apiKeyManager } = await import('../src/core/ApiKeyManager.js');
         await apiKeyManager.initialize();
@@ -255,7 +234,7 @@ app.delete('/api/keys/:id', async (req, res) => {
 });
 
 // Plugin management
-app.get('/api/plugins', (_req, res) => {
+app.get('/api/plugins', (req, res) => {
     const plugins = pluginManager.getAllPlugins();
     const stats = pluginManager.getPluginStats();
     res.json({ plugins, stats });
@@ -295,13 +274,13 @@ app.post('/api/tools/:name', async (req, res) => {
     }
 });
 
-app.get('/api/tools', (_req, res) => {
+app.get('/api/tools', (req, res) => {
     const tools = pluginManager.getAllTools();
     res.json({ tools, count: tools.length });
 });
 
 // Integration management
-app.get('/api/integrations', (_req, res) => {
+app.get('/api/integrations', (req, res) => {
     const connections = integrationManager.getAllConnections();
     const stats = integrationManager.getStats();
     res.json({ connections, stats });
@@ -357,12 +336,12 @@ app.post('/api/integrations/:id/test', async (req, res) => {
 });
 
 // 404 handler
-app.use((_req, res) => {
+app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });
 });
 
 // Error handler
-app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+app.use((err, req, res, next) => {
     logger.error('Unhandled error', err);
     res.status(500).json({ error: 'Internal server error' });
 });
