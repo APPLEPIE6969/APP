@@ -49,16 +49,16 @@ function getApiKeyForProvider(provider: string): string | undefined {
 }
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
 // Get available models endpoint
-app.get('/api/models', (req, res) => {
+app.get('/api/models', (_req, res) => {
     try {
         const providers = aiProviderManager.getProviders();
         const models: any[] = [];
-
+        
         for (const provider of providers) {
             for (const model of provider.models) {
                 models.push({
@@ -69,7 +69,7 @@ app.get('/api/models', (req, res) => {
                 });
             }
         }
-
+        
         res.json({ models });
     } catch (error) {
         logger.error('Error getting models:', error);
@@ -78,7 +78,7 @@ app.get('/api/models', (req, res) => {
 });
 
 // Get available providers endpoint
-app.get('/api/providers', (req, res) => {
+app.get('/api/providers', (_req, res) => {
     try {
         const providers = aiProviderManager.getProviders();
         const providerList = providers.map(p => ({
@@ -86,7 +86,7 @@ app.get('/api/providers', (req, res) => {
             displayName: p.displayName,
             models: p.models,
         }));
-
+        
         res.json({ providers: providerList });
     } catch (error) {
         logger.error('Error getting providers:', error);
@@ -95,12 +95,13 @@ app.get('/api/providers', (req, res) => {
 });
 
 // Chat endpoint
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', async (req, res): Promise<void> => {
     try {
         const { messages, provider, model, apiKey, maxTokens, temperature } = req.body;
 
         if (!messages || !Array.isArray(messages)) {
-            return res.status(400).json({ error: 'Messages array is required' });
+            res.status(400).json({ error: 'Messages array is required' });
+            return;
         }
 
         const config = ConfigManager.getInstance();
